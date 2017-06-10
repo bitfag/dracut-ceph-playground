@@ -1,0 +1,81 @@
+---
+- name: create rados block device
+  shell: rbd info demo_rbd || rbd create demo_rbd --size 4096
+  args:
+    creates: /dev/rbd0
+
+#- name: wait for rbd...
+#  pause: seconds=5
+
+- name: set special features for rbd
+  # XXX: "||:" is a workaround for 2nd run of this command
+  shell: "rbd feature disable demo_rbd exclusive-lock, object-map, fast-diff, deep-flatten"
+  ignore_errors: yes
+  args:
+    creates: /dev/rbd0
+
+- name: map rados block device
+  command: rbd map demo_rbd
+  args:
+    creates: /dev/rbd0
+
+- name: create filesystem on rbd device
+  filesystem: fstype=ext4 dev=/dev/rbd0
+
+- name: mount rbd
+  # XXX: mount always adds to fstab https://github.com/ansible/ansible/issues/19820
+  #mount: path=/mnt/rbd src=/dev/rbd0 fstype=ext4 opts=noatime state=mounted
+  command: mount -t ext4 /dev/rbd0 /mnt/rbd -o noatime
+  ignore_errors: yes
+  args:
+    warn: false
+
+- name: copy / to /mnt/rbd
+  command: rsync -ax / /mnt/rbd
+
+- name: adjust fstab in /mnt/rbd
+  lineinfile:
+    path: /mnt/rbd/etc/fstab
+    regexp: '.*\ /\ '
+    line: /dev/rbd0 / ext4 defaults 0 0
+
+- name: create selinux autorelabel flag
+  file: path=/mnt/rbd/.autorelabel state=touch
+
+- name: install required packages
+  yum: name={{ item }} state=latest
+  with_items:
+    - git
+    - gcc
+    - kmod-devel
+
+- name: clone patched dracut repo
+  git: repo=https://github.com/bitfag/dracut.git dest=/srv/dracut
+
+- name: run ./configure
+  command: ./configure chdir=/srv/dracut
+
+- name: make dracut-install
+  make: chdir=/srv/dracut target=dracut-install
+
+- name: generate initramfs with rbd support
+  command: ./dracut.sh --add rbd --add-drivers ext4 -l /boot/initramfs-with-rbd.img
+  args:
+    chdir: /srv/dracut
+    creates: /boot/initramfs-with-rbd.img
+
+- name: obtain ceph admin key
+  command: ceph auth get-key client.admin
+  register: key
+
+- name: create custom grub menuentry
+  template: src=40_custom dest=/etc/grub.d/40_custom
+
+- name: adjust grub default config
+  lineinfile: 
+    path: /etc/default/grub
+    regexp: '^GRUB_TIMEOUT='
+    line: GRUB_TIMEOUT=10
+
+- name: update grub config
+  command: grub2-mkconfig -o /etc/grub2.cfg
