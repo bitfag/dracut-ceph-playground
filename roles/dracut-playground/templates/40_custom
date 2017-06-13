@@ -13,6 +13,6 @@ menuentry 'CentOS Linux rbd' --class centos --class gnu-linux --class gnu --clas
         insmod xfs
         insmod ext2
         set root='hd0,msdos2'
-        linux16 /vmlinuz-{{ ansible_kernel }} ro no_timer_check console=tty0 console=ttyS0,115200 net.ifnames=0 biosdevname=0 crashkernel=auto root=rbd:192.168.42.10,192.168.42.11,192.168.42.11:admin:{{ key['stdout_lines'][0] }}:rbd:demo_rbd ifname=eth1:{{ ansible_eth1['macaddress'] }} ip={{ ansible_eth1['ipv4']['address'] }}::192.168.42.1:{{ ansible_eth1['ipv4']['netmask'] }}:{{ ansible_hostname }}:eth1:off
+        linux16 /vmlinuz-{{ ansible_kernel }} ro no_timer_check console=tty0 console=ttyS0,115200 net.ifnames=0 biosdevname=0 crashkernel=auto root=rbd:192.168.42.10,192.168.42.11,192.168.42.12:admin:{{ key['stdout_lines'][0] }}:rbd:demo_rbd ifname=eth1:{{ ansible_eth1['macaddress'] }} ip={{ ansible_eth1['ipv4']['address'] }}::192.168.42.1:{{ ansible_eth1['ipv4']['netmask'] }}:{{ ansible_hostname }}:eth1:off
         initrd16 /initramfs-with-rbd.img
 }
