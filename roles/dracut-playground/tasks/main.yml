@@ -59,10 +59,9 @@
   make: chdir=/srv/dracut target=dracut-install
 
 - name: generate initramfs with rbd support
-  command: ./dracut.sh --add rbd --add-drivers ext4 -l /boot/initramfs-with-rbd.img
+  command: ./dracut.sh --add rbd --add-drivers ext4 -l --force /boot/initramfs-with-rbd.img
   args:
     chdir: /srv/dracut
-    creates: /boot/initramfs-with-rbd.img
 
 - name: obtain ceph admin key
   command: ceph auth get-key client.admin
