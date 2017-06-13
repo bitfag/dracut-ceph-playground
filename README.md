@@ -45,13 +45,19 @@ ansible-galaxy install -r requirements.yml
 # Deploy
 
 ```
-vagrant up
+vagrant up --provider=libvirt
 ```
 
 ## Provision only dracut VM separately
 
 ```
 ansible-playbook -i hosts dracut-playground.yml
+```
+
+## Provision only dracut VM using local dracut repo instead of git
+
+```
+ansible-playbook -i hosts dracut-playground.yml --extra-vars "source=local dracut_repo_path=/path/to/dracut"
 ```
 
 # Booting from RBD

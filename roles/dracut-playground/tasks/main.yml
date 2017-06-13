@@ -51,6 +51,11 @@
 
 - name: clone patched dracut repo
   git: repo=https://github.com/bitfag/dracut.git dest=/srv/dracut
+  when: source == "git"
+
+- name: sync local dracut repo to the client
+  synchronize: src={{ dracut_repo_path }} dest=/srv/ compress=no
+  when: source == "local"
 
 - name: run ./configure
   command: ./configure chdir=/srv/dracut
