@@ -37,7 +37,7 @@
   lineinfile:
     path: /mnt/rbd/etc/fstab
     regexp: '.*\ /\ '
-    line: /dev/rbd0 / ext4 defaults 0 0
+    line: /dev/rbd0 / ext4 defaults,_netdev 0 0
 
 - name: create selinux autorelabel flag
   file: path=/mnt/rbd/.autorelabel state=touch
